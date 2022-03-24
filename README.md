@@ -1,13 +1,12 @@
 # Indexing
 
-Foobar is a Python library for dealing with word pluralization.
+Implement an inverted index with positional information. Explore indexing and query processing on the scenes from the complete works of Shakespeare.
 
 ## Installation
 
 Download [json-simple-1.1.1.jar](http://www.java2s.com/Code/Jar/j/Downloadjsonsimple111jar.htm). Add the library to the class path in IntelliJ by selecting
-File > Project Structure > Modules
-Under the
-Dependencies``` tab, click on the ```+``` icon, locate the Jar, and then click ```Ok
+```File > Project Structure > Modules```
+Under the ```Dependencies``` tab, click on the ```+``` icon, locate the Jar, and then click ```Ok```.
 
 ## Usage
 
@@ -20,11 +19,11 @@ import java.io.*;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
-# returns 'words'
+// returns 'words'
 foobar.pluralize('word')
 
-# returns 'geese'
+// returns 'geese'
 foobar.pluralize('goose')
 
-# returns 'phenomenon'
+// returns 'phenomenon'
 foobar.singularize('phenomena')

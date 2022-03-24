@@ -10,11 +10,13 @@ public class Indexing {
     private Map<String, List<Posting>> invIndex;
     private ArrayList<String> sceneNames;
     private JSONArray jsonScenes;
+    private Map<String, Integer> playLengths;
 
     public Indexing() {
         invIndex = new LinkedHashMap<>();
         sceneNames = new ArrayList<>();
         jsonScenes = new JSONArray();
+        playLengths = new HashMap<>();
     }
 
     /**
@@ -29,12 +31,16 @@ public class Indexing {
             JSONObject jsonObject = (JSONObject) parser.parse(br);                  // Parse file into JSONObject
             jsonScenes = (JSONArray) jsonObject.get("corpus");                      // Extract scene's elements
             int sumSceneLen = 0;
-            String longestScene = "", shortestScene = "";
-            int longestLen = 1000, shortestLen = 1000, thisLen;
-            for (int i = 0; i < jsonScenes.size(); i++) {                           // While there are more scenes
+            String longestScene = "", shortestScene = "", longestPlay = "", shortestPlay = "";
+            int longestLen = 1000, shortestLen = 1000,  thisLen;
+            for (int i = 0; i < jsonScenes.size(); i++) {
                 JSONObject scene = (JSONObject) jsonScenes.get(i);
+                String play = scene.get("playId").toString();
+                playLengths.putIfAbsent(play, 0);
                 thisLen = scene.get("text").toString().length();
+                playLengths.put(play, playLengths.get(play) + thisLen);
                 sumSceneLen += thisLen;
+                // Find longest and shortest scenes
                 if (thisLen > longestLen) {
                     longestScene = scene.get("sceneId").toString();
                     longestLen = thisLen;
@@ -75,6 +81,15 @@ public class Indexing {
             System.out.println("Avg scene length: " + sumSceneLen/jsonScenes.size());
             System.out.println("Longest scene: " + longestScene);
             System.out.println("Shortest scene: " + shortestScene);
+            // Find longest and shortest plays
+            int longestPlayLen = Collections.max(playLengths.values());
+            int shortestPlayLen = Collections.min(playLengths.values());
+            for (Map.Entry<String, Integer> entry: playLengths.entrySet()) {
+                if (entry.getValue() == longestPlayLen)
+                    System.out.println("Longest play: " + entry.getKey());
+                else if (entry.getValue() == shortestPlayLen)
+                    System.out.println("Shortest play: " + entry.getKey());
+            }
         } catch (IOException | ParseException ex) {
             ex.printStackTrace();
         }
@@ -202,9 +217,10 @@ public class Indexing {
         PrintWriter phrase0 = new PrintWriter(new FileWriter("phrase0.txt"));
         PrintWriter phrase1 = new PrintWriter(new FileWriter("phrase1.txt"));
         PrintWriter phrase2 = new PrintWriter(new FileWriter("phrase2.txt"));
-        PrintWriter graph = new PrintWriter(new FileWriter("graph.csv"));
+        PrintWriter graph = new PrintWriter(new FileWriter("graph.txt"));
 
         //Find scene(s) where the words thee or thou are used more frequently than the word you.
+        //Create a plot. One series is count of "thee" or "thou" vs. sceneNum and count of "you" vs. sceneNum
         int docId, youCount, theeCount, thouCount;
         List<String> scenes = new ArrayList<>();
         for (int i = 0; i < indexing.sceneNames.size(); i++) {
@@ -212,13 +228,14 @@ public class Indexing {
             youCount = indexing.getTermFreq("you", docId);
             theeCount = indexing.getTermFreq("thee", docId);
             thouCount = indexing.getTermFreq("thou", docId);
-            graph.println(theeCount + thouCount + "," + i);
+            graph.println(docId + "," + (int) (theeCount + thouCount) + "," + youCount);
             if (theeCount > youCount || thouCount > youCount)
                 scenes.add(indexing.sceneNames.get(i));
         }
         Collections.sort(scenes);
         scenes.forEach(s -> terms0.println(s));
         terms0.close();
+        graph.close();
 
         //Find scene(s) where the place names venice, rome, or denmark are mentioned.
         List<String> places = new ArrayList<String>(Arrays.asList("venice", "rome", "denmark"));
