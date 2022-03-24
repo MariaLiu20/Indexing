@@ -228,7 +228,7 @@ public class Indexing {
             youCount = indexing.getTermFreq("you", docId);
             theeCount = indexing.getTermFreq("thee", docId);
             thouCount = indexing.getTermFreq("thou", docId);
-            graph.println(docId + "," + (int) (theeCount + thouCount) + "," + youCount);
+            graph.println(i + "," + (int) (theeCount + thouCount) + "," + youCount);
             if (theeCount > youCount || thouCount > youCount)
                 scenes.add(indexing.sceneNames.get(i));
         }
