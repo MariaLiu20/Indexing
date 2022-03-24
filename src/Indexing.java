@@ -31,7 +31,7 @@ public class Indexing {
             JSONObject jsonObject = (JSONObject) parser.parse(br);                  // Parse file into JSONObject
             jsonScenes = (JSONArray) jsonObject.get("corpus");                      // Extract scene's elements
             int sumSceneLen = 0;
-            String longestScene = "", shortestScene = "", longestPlay = "", shortestPlay = "";
+            String longestScene = "", shortestScene = "";
             int longestLen = 1000, shortestLen = 1000,  thisLen;
             for (int i = 0; i < jsonScenes.size(); i++) {
                 JSONObject scene = (JSONObject) jsonScenes.get(i);
@@ -140,7 +140,7 @@ public class Indexing {
      */
     private List<String> searchScenes(String phrase) {
         HashSet<String> scenes = new HashSet<>();
-        String[] words = phrase.split("\\s+");          // ["tropical", "fish"]
+        String[] words = phrase.split("\\s+");
         List<List<Posting>> postingLists = new ArrayList<>();
         for (String word : words) {
             if (invIndex.containsKey(word)) {
@@ -148,12 +148,12 @@ public class Indexing {
             }
         }
         boolean checkForNextWord;
-        for (Posting first : postingLists.get(0)) {                     //tropical's posting list [1: 1, 3, 7], [2: 6, 17]
-            for (int i = 1; i < words.length; i++) {                    //next word = fish
+        for (Posting first : postingLists.get(0)) {           
+            for (int i = 1; i < words.length; i++) {          
                 checkForNextWord = false;
-                for (Posting next : postingLists.get(i)) {              //fish's posting list     [1: 2, 4], [2: 18]
-                    if (next.getDocID() == first.getDocID()) {          //if same doc
-                        for (int firstPos : first.getPositions()) {     //check if next to each other
+                for (Posting next : postingLists.get(i)) {        
+                    if (next.getDocID() == first.getDocID()) {     
+                        for (int firstPos : first.getPositions()) {  
                             for (int nextPos : next.getPositions()) {
                                 if (nextPos == firstPos + 1) {
                                     checkForNextWord = true;
