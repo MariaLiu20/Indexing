@@ -32,25 +32,28 @@ public class Indexing {
             jsonScenes = (JSONArray) jsonObject.get("corpus");                      // Extract scene's elements
             int sumSceneLen = 0;
             String longestScene = "", shortestScene = "";
-            int longestLen = 1000, shortestLen = 1000,  thisLen;
+            int longestLen = 100, shortestLen = 100,  thisLen;
             for (int i = 0; i < jsonScenes.size(); i++) {
                 JSONObject scene = (JSONObject) jsonScenes.get(i);
-                String play = scene.get("playId").toString();
-                playLengths.putIfAbsent(play, 0);
-                thisLen = scene.get("text").toString().length();
-                playLengths.put(play, playLengths.get(play) + thisLen);
+                String sceneName = scene.get("sceneId").toString();
+                sceneNames.add(sceneName);
+                String[] terms = scene.get("text").toString().split("\\s+");
+                thisLen = terms.length;
                 sumSceneLen += thisLen;
                 // Find longest and shortest scenes
                 if (thisLen > longestLen) {
-                    longestScene = scene.get("sceneId").toString();
+                    longestScene = sceneName;
                     longestLen = thisLen;
                 }
                 else if (thisLen < shortestLen) {
-                    shortestScene = scene.get("sceneId").toString();
+                    shortestScene = sceneName;
                     shortestLen = thisLen;
                 }
-                sceneNames.add(scene.get("sceneId").toString());
-                String[] terms = scene.get("text").toString().split("\\s+");
+                // Build a map<playId, playLength>
+                String play = scene.get("playId").toString();
+                playLengths.putIfAbsent(play, 0);
+                playLengths.put(play, playLengths.get(play) + thisLen);
+                // Build inverted index
                 int pos = 1;
                 for (String term : terms) {
                     if (!invIndex.containsKey(term)) {
@@ -140,7 +143,7 @@ public class Indexing {
      */
     private List<String> searchScenes(String phrase) {
         HashSet<String> scenes = new HashSet<>();
-        String[] words = phrase.split("\\s+");
+        String[] words = phrase.split("\\s+");                    // ["tropical", "fish"]
         List<List<Posting>> postingLists = new ArrayList<>();
         for (String word : words) {
             if (invIndex.containsKey(word)) {
@@ -148,12 +151,12 @@ public class Indexing {
             }
         }
         boolean checkForNextWord;
-        for (Posting first : postingLists.get(0)) {           
-            for (int i = 1; i < words.length; i++) {          
+        for (Posting first : postingLists.get(0)) {                     //tropical's posting list [1: 1, 3, 7], [2: 6, 17]
+            for (int i = 1; i < words.length; i++) {                    //next word = fish
                 checkForNextWord = false;
-                for (Posting next : postingLists.get(i)) {        
-                    if (next.getDocID() == first.getDocID()) {     
-                        for (int firstPos : first.getPositions()) {  
+                for (Posting next : postingLists.get(i)) {              //fish's posting list     [1: 2, 4], [2: 18]
+                    if (next.getDocID() == first.getDocID()) {          //if same doc
+                        for (int firstPos : first.getPositions()) {     //check if next to each other
                             for (int nextPos : next.getPositions()) {
                                 if (nextPos == firstPos + 1) {
                                     checkForNextWord = true;
@@ -191,7 +194,7 @@ public class Indexing {
      * @return list of playIDs
      */
     private List<String> searchPlays(String term) {
-        HashSet<String> plays = new HashSet<String>();
+        HashSet<String> plays = new HashSet<>();
         String sceneId;
         for (String word : invIndex.keySet()) {
             if (term.equals(word)) {
